@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step required'",
+    "build": "echo 'Build completed'",
     "start": "node api/cron.js",
     "test": "node scripts/test-monitoring.js",
     "test:summary": "node scripts/test-summary.js",
