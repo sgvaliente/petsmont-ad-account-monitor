@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
   "crons": [
     { "path": "/api/cron?secret=0bfb51f389c3a4abce98ec2b06a8e8c789babbcd2c18f5535c27df4335466913", "schedule": "*/10 * * * * *" }
   ]
