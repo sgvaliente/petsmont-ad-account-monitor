@@ -305,4 +305,4 @@ curl "localhost:3000/api/cron?secret=YOUR_SECRET"  # Manual trigger
 - **Daily Budget**: ~$1000 (estimated)
 - **Current CPA**: $194.38 (⚠️ Above $80 target)
 - **Token**: Valid until 12/9/2025
-- **Monitoring**: Active and sending alerts
+- **Monitoring**: Active and sending alerts# Trigger new deployment
