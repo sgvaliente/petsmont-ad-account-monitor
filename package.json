@@ -1,0 +1,36 @@
+{
+  "name": "petsmont-ad-account-monitor",
+  "version": "1.0.0",
+  "description": "Meta Ads watchdog that monitors for irregularities and sends Telegram alerts",
+  "main": "api/cron.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "node api/cron.js",
+    "test": "node scripts/test-monitoring.js",
+    "test:summary": "node scripts/test-summary.js",
+    "test:pacing": "node scripts/test-pacing.js",
+    "token:check": "node scripts/manage-token.js check",
+    "token:exchange": "node scripts/manage-token.js exchange"
+  },
+  "dependencies": {
+    "facebook-nodejs-business-sdk": "^19.0.0",
+    "dotenv": "^16.3.1",
+    "undici": "^6.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "meta",
+    "facebook",
+    "ads",
+    "monitoring",
+    "telegram",
+    "vercel",
+    "cron"
+  ],
+  "author": "Sebastian Valiente",
+  "license": "MIT"
+}
