@@ -6,32 +6,58 @@ let currentSchedule = '0 * * * *'; // Default to hourly (production)
 let isTestMode = false;
 
 export default async function handler(req, res) {
+  console.log('🕐 [CRON] Cron endpoint called');
+  console.log('🕐 [CRON] Request method:', req.method);
+  console.log('🕐 [CRON] Request query:', req.query);
+  console.log('🕐 [CRON] Request headers:', req.headers);
+  
   try {
     const { secret, schedule } = req.query || {};
+    console.log(`🕐 [CRON] Secret provided: ${secret ? 'YES' : 'NO'}`);
+    console.log(`🕐 [CRON] Expected secret: ${config.cronSecret ? 'SET' : 'MISSING'}`);
+    
     if (secret !== config.cronSecret) {
+      console.log('❌ [CRON] Unauthorized request - secret mismatch');
       return res.status(401).json({ error: 'unauthorized' });
     }
+
+    console.log('✅ [CRON] Secret validated successfully');
 
     // Update schedule if provided (from toggle endpoint)
     if (schedule) {
       currentSchedule = schedule;
       isTestMode = schedule.includes('*/30 * * * * *');
-      console.log(`📅 Cron schedule updated: ${schedule} (${isTestMode ? 'TEST' : 'PRODUCTION'} mode)`);
+      console.log(`📅 [CRON] Schedule updated: ${schedule} (${isTestMode ? 'TEST' : 'PRODUCTION'} mode)`);
     }
 
-    console.log(`🕐 Running cron job (${isTestMode ? 'TEST' : 'PRODUCTION'} mode - ${currentSchedule})`);
+    console.log(`🕐 [CRON] Running cron job (${isTestMode ? 'TEST' : 'PRODUCTION'} mode - ${currentSchedule})`);
+    console.log(`🕐 [CRON] Environment check:`);
+    console.log(`🕐 [CRON] - NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+    console.log(`🕐 [CRON] - VERCEL: ${process.env.VERCEL || 'undefined'}`);
+    console.log(`🕐 [CRON] - VERCEL_URL: ${process.env.VERCEL_URL || 'undefined'}`);
+    
     const result = await runChecks();
     
-    console.log(`✅ Cron job completed. Alerts: ${result.alerts?.length || 0}`);
+    console.log(`✅ [CRON] Cron job completed successfully`);
+    console.log(`✅ [CRON] Result:`, result);
+    console.log(`✅ [CRON] Alerts generated: ${result.alerts?.length || 0}`);
+    
     return res.status(200).json({ 
       ok: true, 
       alerts: result.alerts?.length || 0,
       mode: isTestMode ? 'TEST' : 'PRODUCTION',
-      schedule: currentSchedule
+      schedule: currentSchedule,
+      timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error('❌ Cron error:', err);
-    return res.status(500).json({ ok: false, error: 'internal' });
+    console.error('❌ [CRON] Cron error:', err);
+    console.error('❌ [CRON] Error stack:', err.stack);
+    return res.status(500).json({ 
+      ok: false, 
+      error: 'internal',
+      message: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
