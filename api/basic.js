@@ -1,3 +1,3 @@
 module.exports = function handler(req, res) {
-  res.status(200).json({ message: 'Basic function working!' });
+  res.status(200).json({ message: 'Basic function working! - Updated' });
 };
