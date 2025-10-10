@@ -13,7 +13,8 @@
     "test:pacing": "node scripts/test-pacing.js",
     "token:check": "node scripts/manage-token.js check",
     "token:exchange": "node scripts/manage-token.js exchange",
-    "toggle:cron": "node scripts/toggle-cron.js"
+    "toggle:cron": "node scripts/toggle-cron.js",
+    "status": "node scripts/check-status.js"
   },
   "dependencies": {
     "facebook-nodejs-business-sdk": "^19.0.0",
