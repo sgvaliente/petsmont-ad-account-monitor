@@ -42,21 +42,29 @@ export default async function handler(req, res) {
     console.log(`✅ [CRON] Result:`, result);
     console.log(`✅ [CRON] Alerts generated: ${result.alerts?.length || 0}`);
     
+    // Get EST timestamp
+    const estTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    
     return res.status(200).json({ 
       ok: true, 
       alerts: result.alerts?.length || 0,
       mode: isTestMode ? 'TEST' : 'PRODUCTION',
       schedule: currentSchedule,
-      timestamp: new Date().toISOString()
+      timestamp: estTime,
+      timezone: "America/New_York"
     });
   } catch (err) {
     console.error('❌ [CRON] Cron error:', err);
     console.error('❌ [CRON] Error stack:', err.stack);
+    // Get EST timestamp for error response
+    const estTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    
     return res.status(500).json({ 
       ok: false, 
       error: 'internal',
       message: err.message,
-      timestamp: new Date().toISOString()
+      timestamp: estTime,
+      timezone: "America/New_York"
     });
   }
 }

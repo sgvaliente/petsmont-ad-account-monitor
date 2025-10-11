@@ -37,9 +37,12 @@ export default async function handler(req, res) {
     // Get business day progress
     const dayProgress = getBusinessDayProgress();
 
+    // Get EST timestamp
+    const estTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    
     // Build status response
     const status = {
-      timestamp: new Date().toISOString(),
+      timestamp: estTime,
       timezone: 'America/New_York',
       businessDay: {
         currentHour: dayProgress.currentHour,
