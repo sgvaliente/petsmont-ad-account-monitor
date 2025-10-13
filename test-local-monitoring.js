@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { fetchTodaysInsights, getTokenInfo, getDailyBudget, fetchTodaysAccountSpend, fetchTodaysAccountCPA } from './lib/metaClient.js';
+import { fetchTodaysInsights, getTokenInfo, getDailyBudget, fetchTodaysAccountSpend, fetchTodaysAccountCPA, hasActiveCampaigns } from './lib/metaClient.js';
 import bizSdk from 'facebook-nodejs-business-sdk';
 import { config } from './lib/config.js';
 
@@ -72,12 +72,13 @@ try {
   // Run the same logic as runChecks but with mock notifier
   console.log('🔍 [LOCAL TEST] Fetching data...');
   const dayProgress = getBusinessDayProgress();
-  const [tokenInfo, todaysInsights, dailyBudget, accountSpend, accountCPA] = await Promise.all([
+  const [tokenInfo, todaysInsights, dailyBudget, accountSpend, accountCPA, campaignsActive] = await Promise.all([
     getTokenInfo(),
     fetchTodaysInsights(),
     getDailyBudget(),
     fetchTodaysAccountSpend(),
-    fetchTodaysAccountCPA()
+    fetchTodaysAccountCPA(),
+    hasActiveCampaigns()
   ]);
 
   // Use account-level spend instead of summing ad set spend
@@ -92,6 +93,7 @@ try {
   console.log(`   - Daily budget: $${dailyBudget.toFixed(2)}`);
   console.log(`   - Spend %: ${spendPercent.toFixed(1)}%`);
   console.log(`   - Business day: ${dayProgress.progressPercent.toFixed(0)}% complete`);
+  console.log(`   - Campaigns active: ${campaignsActive ? 'YES' : 'NO'}`);
   
   // Show detailed breakdown of ad sets
   console.log(`\n📊 [LOCAL TEST] Ad Set Breakdown:`);
@@ -133,6 +135,9 @@ try {
     alerts.push(...summaryAlerts);
   }
 
+  // Check if there are any currently active campaigns
+  console.log(`🔍 [LOCAL TEST] Active campaigns check: ${campaignsActive ? 'YES' : 'NO'} (based on campaign status)`);
+  
   // Add spend context to alerts that need it
   const alertsWithContext = alerts.map(alert => {
     if (alert.key.includes('spend') || alert.key.includes('pacing') || alert.key.includes('cpa')) {
@@ -150,8 +155,17 @@ try {
     return alert;
   });
 
-  // Mock send alerts
-  await mockSendAlerts(alertsWithContext);
+  // Test the new logic: Send alerts if any AND there are active campaigns
+  if (alerts.length > 0 && campaignsActive) {
+    console.log('📱 [LOCAL TEST] Sending alerts to Telegram...');
+    await mockSendAlerts(alertsWithContext);
+    console.log('📱 [LOCAL TEST] Alerts sent to Telegram successfully');
+  } else if (alerts.length > 0 && !campaignsActive) {
+    console.log('⏸️ [LOCAL TEST] Alerts generated but no active campaigns - skipping Telegram messages');
+    console.log(`📊 [LOCAL TEST] Would have sent ${alerts.length} alerts but skipped due to no active campaigns`);
+  } else {
+    console.log('✅ [LOCAL TEST] No alerts - all checks passed');
+  }
   
   console.log('\n✅ [LOCAL TEST] Monitoring completed successfully!');
   console.log(`📊 [LOCAL TEST] Generated ${alerts.length} total alerts`);
