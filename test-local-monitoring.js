@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { fetchTodaysInsights, getTokenInfo, getDailyBudget } from './lib/metaClient.js';
+import { fetchTodaysInsights, getTokenInfo, getDailyBudget, fetchTodaysAccountSpend, fetchTodaysAccountCPA } from './lib/metaClient.js';
 import bizSdk from 'facebook-nodejs-business-sdk';
 import { config } from './lib/config.js';
 
@@ -72,40 +72,26 @@ try {
   // Run the same logic as runChecks but with mock notifier
   console.log('🔍 [LOCAL TEST] Fetching data...');
   const dayProgress = getBusinessDayProgress();
-  const [tokenInfo, todaysInsights, dailyBudget] = await Promise.all([
+  const [tokenInfo, todaysInsights, dailyBudget, accountSpend, accountCPA] = await Promise.all([
     getTokenInfo(),
     fetchTodaysInsights(),
-    getDailyBudget()
+    getDailyBudget(),
+    fetchTodaysAccountSpend(),
+    fetchTodaysAccountCPA()
   ]);
 
-  const totalSpend = todaysInsights.reduce((sum, r) => sum + r.spend, 0);
+  // Use account-level spend instead of summing ad set spend
+  const totalSpend = accountSpend;
   const spendPercent = dailyBudget > 0 ? (totalSpend / dailyBudget) * 100 : 0;
-
-  // Get account-level spend for comparison
-  console.log(`\n📊 [LOCAL TEST] Getting account-level spend for comparison...`);
-  const account = new AdAccount(config.adAccountId);
-  const now = new Date();
-  const estTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-  const year = estTime.getFullYear();
-  const month = String(estTime.getMonth() + 1).padStart(2, '0');
-  const day = String(estTime.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
-  
-  const accountInsights = await account.getInsights(['spend'], {
-    time_range: { since: todayStr, until: todayStr },
-    level: 'account'
-  });
-  
-  const accountSpend = accountInsights.length > 0 ? Number(accountInsights[0].spend || 0) : 0;
 
   console.log(`📊 [LOCAL TEST] Data fetched:`);
   console.log(`   - Ad sets: ${todaysInsights.length}`);
-  console.log(`   - Ad set total spend: $${totalSpend.toFixed(2)}`);
-  console.log(`   - Account total spend: $${accountSpend.toFixed(2)}`);
+  console.log(`   - Ad set total spend: $${todaysInsights.reduce((sum, r) => sum + r.spend, 0).toFixed(2)}`);
+  console.log(`   - Account total spend: $${totalSpend.toFixed(2)}`);
+  console.log(`   - Account CPA: $${accountCPA.toFixed(2)}`);
   console.log(`   - Daily budget: $${dailyBudget.toFixed(2)}`);
   console.log(`   - Spend %: ${spendPercent.toFixed(1)}%`);
   console.log(`   - Business day: ${dayProgress.progressPercent.toFixed(0)}% complete`);
-  console.log(`   - Date queried: ${todayStr}`);
   
   // Show detailed breakdown of ad sets
   console.log(`\n📊 [LOCAL TEST] Ad Set Breakdown:`);
@@ -125,7 +111,7 @@ try {
   const tokenAlerts = ruleTokenExpiration(tokenInfo);
   const pacingAlerts = rulePacingIrregularity(todaysInsights, dailyBudget);
   const burstAlerts = ruleSpendingBurst(todaysInsights, dailyBudget);
-  const cpaAlerts = ruleCPAAboveTarget(todaysInsights);
+  const cpaAlerts = ruleCPAAboveTarget(accountCPA);
   
   console.log(`   - Token alerts: ${tokenAlerts.length}`);
   console.log(`   - Pacing alerts: ${pacingAlerts.length}`);
@@ -143,7 +129,7 @@ try {
   const summaryCheck = shouldSendSummaryReport();
   if (summaryCheck.shouldSend) {
     console.log(`📊 [LOCAL TEST] Generating ${summaryCheck.reportType} summary report...`);
-    const summaryAlerts = ruleDailySummary(todaysInsights, dailyBudget, summaryCheck.reportType);
+    const summaryAlerts = ruleDailySummary(todaysInsights, dailyBudget, summaryCheck.reportType, accountSpend, accountCPA);
     alerts.push(...summaryAlerts);
   }
 
