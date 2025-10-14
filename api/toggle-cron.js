@@ -6,7 +6,7 @@
 import { config } from '../lib/config.js';
 
 // In-memory storage for current schedule (resets on each deployment)
-let currentSchedule = '0 * * * *'; // Default to hourly (production)
+let currentSchedule = '*/30 * * * *'; // Default to every 30 minutes (production)
 let isTestMode = false;
 
 export default async function handler(req, res) {
@@ -20,10 +20,10 @@ export default async function handler(req, res) {
 
     // Toggle the schedule
     if (isTestMode) {
-      // Switch to production (hourly)
-      currentSchedule = '0 * * * *';
+      // Switch to production (every 30 minutes)
+      currentSchedule = '*/30 * * * *';
       isTestMode = false;
-      console.log('🔄 Switched to PRODUCTION mode: Every hour');
+      console.log('🔄 Switched to PRODUCTION mode: Every 30 minutes');
     } else {
       // Switch to test (30 seconds)
       currentSchedule = '*/30 * * * * *';
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
 
     const mode = isTestMode ? 'TEST' : 'PRODUCTION';
-    const schedule = isTestMode ? 'Every 30 seconds' : 'Every hour';
+    const schedule = isTestMode ? 'Every 30 seconds' : 'Every 30 minutes';
     
     console.log(`✅ Cron schedule updated to ${mode} mode (${schedule})`);
     console.log(`📅 Current schedule: ${currentSchedule}`);

@@ -2,7 +2,7 @@ import { runChecks } from '../lib/runner.js';
 import { config } from '../lib/config.js';
 
 // Import the toggle state (shared between endpoints)
-let currentSchedule = '0 * * * *'; // Default to hourly (production)
+let currentSchedule = '*/30 * * * *'; // Default to every 30 minutes (production)
 let isTestMode = false;
 
 export default async function handler(req, res) {
